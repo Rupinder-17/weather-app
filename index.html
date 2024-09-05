@@ -8,64 +8,134 @@
   </head>
   <style>
     body {
-      background-color: rgb(4, 60, 109);
+      background-image: url("https://scied.ucar.edu/sites/default/files/media/images/cirrocumulus1_big.jpg");
+      background-repeat: no-repeat;
+      background-size: cover;
     }
   </style>
   <body>
     <div
-      class="bg-cyan-900 mt-4 flex items-center w-96 px-4 py-4 m-auto rounded shadow"
+      class="mt-4 flex flex-col items-center justify-center w-96 px-4 py-6 m-auto rounded-xl shadow-2xl"
     >
-      <div class="">
-        <div class="text-center text-gray-200 font-bold text-2xl">
-          <h1>Weather App</h1>
-        </div>
-        <div class="mt-4">
-          <input type="text" name="" class="py-1 w-" id="city-name" />
-          <button
-            id="weatherBtn"
-            class="py-0.5 bg-yellow-400 text-white px-3 font-bold text-lg"
-          >
-            Show weather
-          </button>
-        </div>
-
-        <div id="contanier" class="text-center py-6"></div>
+      <!-- <div class=""> -->
+      <div class="text-center text-gray-200 font-bold text-3xl mb-6">
+        <h1>Weather App</h1>
       </div>
+      <div class="mt-4">
+        <input type="text" name="" class="py-2 px-3 w-64" id="city-name" />
+        <button
+          id="weatherBtn"
+          class="py-2 bg-blue-800 text-white px-3 font-bold text-lg rounded"
+        >
+          Search
+        </button>
+      </div>
+
+      <div id="contanier" class="text-center space-y-4"></div>
+      <ul id="list" class="w-full"></ul>
     </div>
     <script>
       const cityName = document.getElementById("city-name");
       const weatherBtn = document.getElementById("weatherBtn");
       const contanier = document.getElementById("contanier");
+      const list = document.getElementById("list");
+      let weaterData = JSON.parse(localStorage.getItem("weatherEntery")) || [];
+      console.log(weaterData);
 
-      const fetchApi = async () => {
-        const city = cityName.value;
-        city.value = "";
-        // const apiKey = "09e7a1b8b2844ba990b110125243108";
+      const fetchApi = async (locationName = null) => {
+        let city = cityName.value;
+
+        if (cityName.value == "") {
+          city = locationName;
+        }
+        console.log(cityName.value);
+        console.log(city);
+
+        cityName.value = "";
+        const apiKey = "09e7a1b8b2844ba990b110125243108";
 
         try {
           const response = await fetch(
-            `https://api.weatherapi.com/v1/current.json?key=09e7a1b8b2844ba990b110125243108&q=${city}`
+            `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${city}`
           );
           console.log(response);
 
           const data = await response.json();
           console.log(data);
+          const checklist = weaterData.some(
+            (item) =>
+              item.location.name.toLowerCase() ===
+              data.location.name.toLowerCase()
+          );
 
+          if (!checklist) {
+            if (data.location.name) {
+              weaterData.push(data);
+              localStorage.setItem("weatherEntery", JSON.stringify(weaterData));
+              console.log("log", weaterData);
+              
+            }
+          }else{
+            console.log("city already exists in the list");
+            
+          }
           const weatherData = `
 
-          <img src="${data.current.condition.icon}" class="text-center"/>
-                <h2 class="text-white font-bold text-3xl">${data.location.name}</h2>
-                <p class="text-yellow-500 text-xl font-semibold">${data.current.condition.text}</p>
-                <p class="text-white text-xl font-semibold">${data.current.temp_c} °C</p>
+                <img src="${data.current.condition.icon}" class="mx-auto"/>
+                <h2 class="text-gray-100 font-bold text-3xl ">${data.location.name}</h2>
+                <p class="text-gray-100   text-3xl font-bold">${data.current.condition.text}</p>
+                <p class="text-cyan-800 text-2xl font-bold">${data.current.temp_c} °C</p>
 
                 `;
           contanier.innerHTML = weatherData;
+
+          weatherList();
         } catch (error) {
           contanier.innerHTML = `<p class="text-red-400">your location is not found</p>`;
           console.log(error);
         }
       };
-      weatherBtn.addEventListener("click", fetchApi);
+
+      const weatherList = () => {
+        list.innerHTML = "";
+        weaterData.map((item, index) => {
+          const listData = `<li class=" flex w-full mt-4">
+              <p class="name w-full text-2xl text-gray-200 font-bold ">${item.location.name}</p>
+              <button class=" btn text-2xl text-gray-800" data-city=${item.location.name} >x</button>
+              </li>`;
+
+          list.innerHTML += listData;
+          console.log("list", listData);
+        });
+
+        const locationName = document.querySelectorAll(".name");
+        locationName.forEach((element) => {
+          element.addEventListener("click", async function () {
+            fetchApi(element.innerText);
+            console.log(element.innerText);
+          });
+        });
+
+        const crossBtn = document.querySelectorAll(".btn");
+        crossBtn.forEach((item) => {
+          item.addEventListener("click", function () {
+            const dataGetattribute = item.getAttribute("data-city");
+            console.log("hhh", dataGetattribute);
+
+            weaterData = weaterData.filter(
+              (elm) => elm.location.name !== dataGetattribute
+            );
+            console.log("wert", weaterData);
+
+            localStorage.setItem("weatherEntery", JSON.stringify(weaterData));
+            weatherList();
+          });
+        });
+      };
+      weatherBtn.addEventListener("click", function () {
+        fetchApi();
+      });
+      // weatherList();
     </script>
   </body>
 </html>
