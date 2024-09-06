@@ -64,13 +64,13 @@
           console.log(data);
           const checklist = weaterData.some(
             (item) =>
-              item.location.name.toLowerCase() ===
+              item.toLowerCase() ===
               data.location.name.toLowerCase()
           );
 
           if (!checklist) {
             if (data.location.name) {
-              weaterData.push(data);
+              weaterData.push(data.location.name);
               localStorage.setItem("weatherEntery", JSON.stringify(weaterData));
               console.log("log", weaterData);
               
@@ -100,8 +100,8 @@
         list.innerHTML = "";
         weaterData.map((item, index) => {
           const listData = `<li class=" flex w-full mt-4">
-              <p class="name w-full text-2xl text-gray-200 font-bold ">${item.location.name}</p>
-              <button class=" btn text-2xl text-gray-800" data-city=${item.location.name} >x</button>
+              <p class="name w-full text-2xl text-gray-200 font-bold ">${item}</p>
+              <button class=" btn text-2xl text-gray-800" data-city=${item} >x</button>
               </li>`;
 
           list.innerHTML += listData;
@@ -123,7 +123,7 @@
             console.log("hhh", dataGetattribute);
 
             weaterData = weaterData.filter(
-              (elm) => elm.location.name !== dataGetattribute
+              (elm) => elm !== dataGetattribute
             );
             console.log("wert", weaterData);
 
@@ -132,8 +132,10 @@
           });
         });
       };
-      weatherBtn.addEventListener("click", function () {
+      weatherBtn.addEventListener("click", function (event) {
         fetchApi();
+        console.log(event);
+        
       });
       // weatherList();
     </script>
