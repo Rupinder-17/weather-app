@@ -61,7 +61,7 @@
           console.log(response);
 
           const data = await response.json();
-          console.log(data);
+          console.log("data",data);
           const checklist = weaterData.some(
             (item) =>
               item.toLowerCase() ===
@@ -141,3 +141,106 @@
     </script>
   </body>
 </html>
+
+<script>
+  const cityInput = document.getElementById("city-name");
+  const searchBtn = document.getElementById("weatherBtn");
+  const weatherContainer = document.getElementById("contanier");
+  const cityList = document.getElementById("list");
+  let savedCities = JSON.parse(localStorage.getItem("weatherEntries")) || [];
+  console.log(savedCities);
+
+  const fetchWeatherData = async (cityFromList = null) => {
+    let city = cityInput.value;
+
+    if (cityInput.value === "") {
+      city = cityFromList;
+    }
+    console.log(cityInput.value);
+    console.log(city);
+
+    cityInput.value = "";
+    const apiKey = "09e7a1b8b2844ba990b110125243108";
+
+    try {
+      const response = await fetch(
+        `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${city}`
+      );
+      console.log(response);
+
+      const data = await response.json();
+      console.log(data);
+
+      const isCityAlreadySaved = savedCities.some(
+        (savedCity) => savedCity.toLowerCase() === data.location.name.toLowerCase()
+      );
+
+      if (!isCityAlreadySaved) {
+        if (data.location.name) {
+          savedCities.push(data.location.name);
+          localStorage.setItem("weatherEntries", JSON.stringify(savedCities));
+          console.log("Saved cities:", savedCities);
+        }
+      } else {
+        console.log("City is already in the list.");
+      }
+
+      const weatherDetails = `
+            <img src="${data.current.condition.icon}" class="mx-auto"/>
+            <h2 class="text-gray-100 font-bold text-3xl ">${data.location.name}</h2>
+            <p class="text-gray-100 text-3xl font-bold">${data.current.condition.text}</p>
+            <p class="text-cyan-800 text-2xl font-bold">${data.current.temp_c} °C</p>
+        `;
+      weatherContainer.innerHTML = weatherDetails;
+
+      updateCityList();
+    } catch (error) {
+      weatherContainer.innerHTML = `<p class="text-red-400">Location not found</p>`;
+      console.log(error);
+    }
+  };
+
+  const updateCityList = () => {
+    cityList.innerHTML = "";
+    savedCities.map((city, index) => {
+      const cityListItem = `
+        <li class="flex w-full mt-4">
+          <p class="city-name w-full text-2xl text-gray-200 font-bold">${city}</p>
+          <button class="delete-btn text-2xl text-gray-800" data-city="${city}">x</button>
+        </li>
+      `;
+      cityList.innerHTML += cityListItem;
+      console.log("List item:", cityListItem);
+    });
+
+    const cityElements = document.querySelectorAll(".city-name");
+    cityElements.forEach((cityElement) => {
+      cityElement.addEventListener("click", async function () {
+        fetchWeatherData(cityElement.innerText);
+        console.log(cityElement.innerText);
+      });
+    });
+
+    const deleteButtons = document.querySelectorAll(".delete-btn");
+    deleteButtons.forEach((button) => {
+      button.addEventListener("click", function () {
+        const cityToDelete = button.getAttribute("data-city");
+        console.log("Deleting:", cityToDelete);
+
+        savedCities = savedCities.filter((city) => city !== cityToDelete);
+        console.log("Updated city list:", savedCities);
+
+        localStorage.setItem("weatherEntries", JSON.stringify(savedCities));
+        updateCityList();
+      });
+    });
+  };
+
+  searchBtn.addEventListener("click", function (event) {
+    fetchWeatherData();
+    console.log(event);
+  });
+
+  // Optionally call updateCityList() to display saved cities when the page loads
+  // updateCityList();
+</script>
